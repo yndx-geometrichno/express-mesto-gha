@@ -1,49 +1,121 @@
 const Card = require("../models/card");
+const ApiError = require("../error/ApiError");
 
-module.exports.getCards = (req, res) => {
-  Card.find({})
-    .then((card) => res.send({ data: card }))
-    .catch((err) => res.status(500).send({ message: "произошла ошибка", err }));
+const getCards = async (req, res, next) => {
+  try {
+    const cards = await Card.find({});
+    return res.send(cards);
+  } catch (err) {
+    return next();
+  }
 };
 
-module.exports.getCard = (req, res) => {
-  Card.findById(req.params.cardId)
-    .then((card) => res.send({ data: card }))
-    .catch((err) => res.status(500).send({ message: "Произошла ошибка", err }));
+const getCard = async (req, res, next) => {
+  try {
+    const { cardId } = req.params;
+    const card = Card.findById(cardId);
+    if (!card) {
+      throw new Error("NotFound");
+    }
+    return res.send(card);
+  } catch (err) {
+    if (err.message === "NotFound") {
+      return next(ApiError.badRequest("Карточка с указанным _id не найдена."));
+    }
+    if (err.name === "CastError") {
+      return next(ApiError.invalid("Id is not valid"));
+    }
+    return next(err);
+  }
 };
 
-module.exports.createCard = (req, res) => {
-  const { name, link } = req.body;
-
-  Card.create({ name, link, owner: req.user._id })
-    .then((card) => res.send({ data: card }))
-    .catch((err) => res.status(500).send({ message: "произошла ошибка", err }));
+const createCard = async (req, res, next) => {
+  try {
+    const { name, link } = req.body;
+    const newCard = await Card.create({ name, link, owner: req.user._id });
+    return res.send(await newCard.save());
+  } catch (err) {
+    if (err.name === "ValidationError") {
+      return next(
+        ApiError.invalid("Переданы некорректные данные при создании карточки")
+      );
+    }
+    return next(err);
+  }
 };
 
-module.exports.deleteCard = (req, res) => {
-  Card.findOneAndDelete({ _id: req.params.cardId })
-    .then((card) =>
-      res.send({ data: card, message: "This card was deleted successfully" })
-    )
-    .catch((err) => res.status(500).send({ message: "Произошла ошибка", err }));
+const deleteCard = async (req, res, next) => {
+  try {
+    const { cardId } = req.params;
+    const card = await Card.findOneAndDelete({ _id: cardId });
+    if (!card) {
+      throw new Error("NotFound");
+    }
+    return res.send(card, { message: "Данная карточка удалена успешно" });
+  } catch (err) {
+    if (err.message === "NotFound") {
+      return next(ApiError.badRequest("Карточка с указанным _id не найдена."));
+    }
+    if (err.name === "CastError") {
+      return next(ApiError.invalid("Id is not valid"));
+    }
+    return next(err);
+  }
 };
 
-module.exports.likeCard = (req, res) => {
-  Card.findByIdAndUpdate(
-    req.params.cardId,
-    { $addToSet: { likes: req.user._id } }, // добавить _id в массив, если его там нет
-    { new: true }
-  )
-    .then((card) => res.send({ data: card, message: "your like was set" }))
-    .catch((err) => res.status(500).send({ message: "произошла ошибка", err }));
+const likeCard = async (req, res, next) => {
+  try {
+    const userId = req.user._id;
+    const { cardId } = req.params;
+    const cardLiked = await Card.findByIdAndUpdate(
+      cardId,
+      { $addToSet: { likes: userId } },
+      { new: true }
+    );
+    if (!cardLiked) {
+      throw new Error("NotFound");
+    }
+    return res.send(cardLiked, { message: "Лайк поставлен" });
+  } catch (err) {
+    if (err.message === "NotFound") {
+      return next(ApiError.badRequest("Карточка с указанным _id не найдена."));
+    }
+    if (err.name === "CastError") {
+      return next(ApiError.invalid("Id is not valid"));
+    }
+    return next(err);
+  }
 };
 
-module.exports.dislikeCard = (req, res) => {
-  Card.findByIdAndUpdate(
-    req.params.cardId,
-    { $pull: { likes: req.user._id } }, // убрать _id из массива
-    { new: true }
-  )
-    .then((card) => res.send({ data: card, message: "Your like was removed" }))
-    .catch((err) => res.status(500).send({ message: "произошла ошибка", err }));
+const dislikeCard = async (req, res, next) => {
+  try {
+    const userId = req.user._id;
+    const { cardId } = req.params;
+    const cardDisliked = await Card.findByIdAndUpdate(
+      cardId,
+      { $pull: { likes: userId } },
+      { new: true }
+    );
+    if (!cardDisliked) {
+      throw new Error("NotFound");
+    }
+    return res.send(cardDisliked, { message: "Your like was removed" });
+  } catch (err) {
+    if (err.message === "NotFound") {
+      return next(ApiError.badRequest("Карточка с указанным _id не найдена."));
+    }
+    if (err.name === "CastError") {
+      return next(ApiError.invalid("Id is not valid"));
+    }
+    return next(err);
+  }
+};
+
+module.exports = {
+  getCard,
+  getCards,
+  createCard,
+  deleteCard,
+  likeCard,
+  dislikeCard,
 };
