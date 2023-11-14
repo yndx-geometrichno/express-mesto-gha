@@ -44,10 +44,8 @@ const createCard = async (req, res, next) => {
 const deleteCard = async (req, res, next) => {
   try {
     const { cardId } = req.params;
-    const card = await Card.findOneAndDelete({ _id: cardId }).orFail(
-      new Error("NotFound")
-    );
-    return res.send(card, { message: "Данная карточка удалена успешно" });
+    await Card.findOneAndDelete({ _id: cardId }).orFail(new Error("NotFound"));
+    return res.status(200).send({ message: "Данная карточка удалена успешно" });
   } catch (err) {
     if (err.message === "NotFound") {
       return next(ApiError.badRequest("Карточка с указанным _id не найдена."));
@@ -62,12 +60,12 @@ const deleteCard = async (req, res, next) => {
 const likeCard = async (req, res, next) => {
   try {
     const { cardId } = req.params;
-    const cardLiked = await Card.findByIdAndUpdate(
+    await Card.findByIdAndUpdate(
       cardId,
       { $addToSet: { likes: req.user._id } },
       { new: true }
     ).orFail(new Error("NotFound"));
-    return res.status(200).send(cardLiked, { message: "Лайк поставлен" });
+    return res.status(200).send({ message: "Лайк поставлен" });
   } catch (err) {
     if (err.message === "NotFound") {
       return next(ApiError.badRequest("Карточка с указанным _id не найдена."));
@@ -82,12 +80,12 @@ const likeCard = async (req, res, next) => {
 const dislikeCard = async (req, res, next) => {
   try {
     const { cardId } = req.params;
-    const cardDisliked = await Card.findByIdAndUpdate(
+    await Card.findByIdAndUpdate(
       cardId,
       { $pull: { likes: req.user._id } },
       { new: true }
     ).orFail(new Error("NotFound"));
-    return res.send(cardDisliked, { message: "Your like was removed" });
+    return res.status(200).send({ message: "Лайк удален" });
   } catch (err) {
     if (err.message === "NotFound") {
       return next(ApiError.badRequest("Карточка с указанным _id не найдена."));
