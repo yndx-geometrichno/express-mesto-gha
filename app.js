@@ -22,8 +22,8 @@ app.use((req, res, next) => {
 app.use("/", router);
 
 app.use(errorHandler);
-app.use('*', (req, res) => {
-  res.status(404).send({message: "This page is not exist"})
-})
+app.use("*", (req, res) => {
+  res.status(404).send({ message: "This page is not exist" });
+});
 
 app.listen(PORT, () => console.log(`Server has started on ${PORT}`));
