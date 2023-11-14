@@ -13,10 +13,7 @@ const getCards = async (req, res, next) => {
 const getCard = async (req, res, next) => {
   try {
     const { cardId } = req.params;
-    const card = Card.findById(cardId);
-    if (!card) {
-      throw new Error("NotFound");
-    }
+    const card = Card.findById(cardId).orFail(new Error("NotFound"));
     return res.send(card);
   } catch (err) {
     if (err.message === "NotFound") {
@@ -47,10 +44,9 @@ const createCard = async (req, res, next) => {
 const deleteCard = async (req, res, next) => {
   try {
     const { cardId } = req.params;
-    const card = await Card.findOneAndDelete({ _id: cardId });
-    if (!card) {
-      throw new Error("NotFound");
-    }
+    const card = await Card.findOneAndDelete({ _id: cardId }).orFail(
+      new Error("NotFound")
+    );
     return res.send(card, { message: "Данная карточка удалена успешно" });
   } catch (err) {
     if (err.message === "NotFound") {
@@ -71,10 +67,7 @@ const likeCard = async (req, res, next) => {
       cardId,
       { $addToSet: { likes: userId } },
       { new: true }
-    );
-    if (!cardLiked) {
-      throw new Error("NotFound");
-    }
+    ).orFail(new Error("NotFound"));
     return res.send(cardLiked, { message: "Лайк поставлен" });
   } catch (err) {
     if (err.message === "NotFound") {
@@ -95,10 +88,7 @@ const dislikeCard = async (req, res, next) => {
       cardId,
       { $pull: { likes: userId } },
       { new: true }
-    );
-    if (!cardDisliked) {
-      throw new Error("NotFound");
-    }
+    ).orFail(new Error("NotFound"));
     return res.send(cardDisliked, { message: "Your like was removed" });
   } catch (err) {
     if (err.message === "NotFound") {
