@@ -1,13 +1,13 @@
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
-const path = require("path");
-const { userRouter } = require("./routes/users");
-const { cardRouter } = require("./routes/cards");
+const router = require("./routes/index");
+const errorHandler = require("./middleware/ErrorHandlingMiddleWare");
 
-const PORT = 3000;
+const PORT = /*process.env.PORT ||*/ 3000;
 
 const app = express();
+app.use(cors());
 app.use(express.json());
 
 mongoose.connect("mongodb://127.0.0.1:27017/mestodb", {});
@@ -19,9 +19,8 @@ app.use((req, res, next) => {
 
   next();
 });
-app.use("/cards", cardRouter)
+app.use("/", router);
 
-app.use(cors());
-app.use("/users", userRouter);
+app.use(errorHandler);
 
 app.listen(PORT, () => console.log(`Server has started on ${PORT}`));
