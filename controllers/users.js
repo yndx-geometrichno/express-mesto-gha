@@ -49,11 +49,11 @@ const updateUserInfo = async (req, res, next) => {
   try {
     const { name, about } = req.body;
     const userId = req.body._id;
-    const updateUser = User.findOneAndUpdate(
+    const updateUser = await User.findOneAndUpdate(
       userId,
       { $set: { name, about } },
-      { new: true }
-    );
+      { new: true, runValidators: true }
+    ).orFail(new Error("ValidationError"));
     return res.send(updateUser);
   } catch (err) {
     console.log(err);
@@ -66,13 +66,13 @@ const updateUserInfo = async (req, res, next) => {
   }
 };
 
-const updateUserAvatar = (req, res, next) => {
+const updateUserAvatar = async (req, res, next) => {
   try {
     const { avatar } = req.body;
-    const userUpdateAvatar = User.findOneAndUpdate(
+    const userUpdateAvatar = await User.findOneAndUpdate(
       req.body._id,
       { $set: { avatar } },
-      { new: true }
+      { new: true, runValidators: true }
     );
     return res.send(userUpdateAvatar);
   } catch (err) {
