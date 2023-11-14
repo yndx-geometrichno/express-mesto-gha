@@ -35,7 +35,7 @@ const createUser = async (req, res, next) => {
     const newUser = await User.create({ name, about, avatar });
     return res.send(await newUser.save());
   } catch (err) {
-    if (err.name === "ValidationError") {
+    if (err.name === "ValidatorError") {
       return next(ApiError.invalid("Переданы некорректные данные при создании пользователя"));
     }
     return next(err);
@@ -52,7 +52,7 @@ const updateUserInfo = async (req, res, next) => {
     );
     return res.send(updateUser);
   } catch (err) {
-    if (err.name === "ValidationError") {
+    if (err.name === "ValidatorError") {
       return next(ApiError.invalid("Переданы некорректные данные при обновлении профиля"));
     }
     return next(err);
@@ -66,7 +66,7 @@ const updateUserAvatar = (req, res, next) => {
     return res.send(userUpdateAvatar);
 
   } catch (err) {
-    if (err.name === "ValidationError") {
+    if (err.name === "ValidatorError") {
       return next(ApiError.invalid("Переданы некорректные данные при обновлении аватара."));
     }
     next(err)

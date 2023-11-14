@@ -20,7 +20,10 @@ const userSchema = new Schema(
       min: [2, "Минимальная длина 2 символа"],
       max: [30, "Максимальная длина 30 символов"],
     },
-    avatar: String,
+    avatar: {
+      type: String,
+      required: true,
+    },
   },
   {
     versionKey: false,
