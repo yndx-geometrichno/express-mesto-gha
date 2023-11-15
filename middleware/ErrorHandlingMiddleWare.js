@@ -1,6 +1,6 @@
 const ApiError = require("../error/ApiError");
 
-// eslint-disable-next-line no-unused-vars
+// eslint-disable-next-line no-unused-vars, func-names
 module.exports = function (err, req, res, next) {
   if (err instanceof ApiError) {
     return res.status(err.status).json({ message: err.message });
