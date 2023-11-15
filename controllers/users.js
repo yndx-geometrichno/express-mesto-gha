@@ -6,7 +6,7 @@ const getUsers = async (req, res, next) => {
     const users = await User.find({});
     return res.send(users);
   } catch (err) {
-    return next();
+    return next(err);
   }
 };
 
@@ -32,7 +32,7 @@ const createUser = async (req, res, next) => {
   try {
     const { name, about, avatar } = req.body;
     const newUser = await User.create({ name, about, avatar });
-    return res.send(await newUser.save());
+    return res.status(201).send(await newUser.save());
   } catch (err) {
     if (err.name === "ValidationError") {
       return next(
@@ -56,7 +56,6 @@ const updateUserInfo = async (req, res, next) => {
     ).orFail(new Error("ValidationError"));
     return res.send(updateUser);
   } catch (err) {
-    console.log(err);
     if (err.name === "ValidationError") {
       return next(
         ApiError.invalid("Переданы некорректные данные при обновлении профиля")
@@ -81,7 +80,7 @@ const updateUserAvatar = async (req, res, next) => {
         ApiError.invalid("Переданы некорректные данные при обновлении аватара.")
       );
     }
-    next(err);
+    return next(err);
   }
 };
 
