@@ -6,7 +6,7 @@ const getCards = async (req, res, next) => {
     const cards = await Card.find({});
     return res.send(cards);
   } catch (err) {
-    return next();
+    return next(err);
   }
 };
 
@@ -30,7 +30,7 @@ const createCard = async (req, res, next) => {
   try {
     const { name, link } = req.body;
     const newCard = await Card.create({ name, link, owner: req.user._id });
-    return res.send(await newCard.save());
+    return res.status(201).send(await newCard.save());
   } catch (err) {
     if (err.name === "ValidationError") {
       return next(
