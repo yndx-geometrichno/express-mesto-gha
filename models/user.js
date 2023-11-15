@@ -1,4 +1,5 @@
 const { Schema, model } = require("mongoose");
+const { isURL } = require("validator");
 
 const userSchema = new Schema(
   {
@@ -22,6 +23,10 @@ const userSchema = new Schema(
     },
     avatar: {
       type: String,
+      validate: {
+        validator: (v) => isURL(v),
+        message: "Некорректный URL",
+      },
       required: true,
     },
   },
