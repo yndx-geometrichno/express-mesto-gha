@@ -33,7 +33,7 @@ const getUser = async (req, res, next) => {
   }
 };
 
-const getMe = async (req,res,next) => {
+const getMe = async (req, res, next) => {
   try {
     const { _id } = req.user;
     const user = await User.findById(_id).orFail(new Error("NotFound"));
@@ -44,9 +44,9 @@ const getMe = async (req,res,next) => {
         ApiError.badRequest("Пользователь по указанному _id не найден")
       );
     }
-    return next(err)
+    return next(err);
   }
-}
+};
 
 const createUser = async (req, res, next) => {
   try {
@@ -59,8 +59,7 @@ const createUser = async (req, res, next) => {
       email,
       password: hashPass,
     });
-    return res.status(201).send({email: newUser.email, _id: newUser._id});
-
+    return res.status(201).send({ email: newUser.email, _id: newUser._id });
   } catch (err) {
     if (err.name === "ValidationError") {
       return next(
