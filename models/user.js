@@ -1,38 +1,69 @@
+const bcrypt = require("bcrypt");
 const { Schema, model } = require("mongoose");
-const { isURL } = require("validator");
+const validator = require("validator");
 
 const userSchema = new Schema(
   {
+    email: {
+      type: String,
+      required: true,
+      unique: true,
+      validate: {
+        validator: (v) => validator.isEmail(v),
+        message: (props) => `${props.value} - это некорректный Email`,
+      },
+    },
+    password: {
+      type: String,
+      required: true,
+      select: false,
+    },
     name: {
       type: String,
-      required: {
-        value: true,
-        message: "Поле имя является обязательным",
-      },
+      default: "Жак-Ив Кусто",
       minlength: 2,
       maxlength: 30,
     },
     about: {
       type: String,
-      required: {
-        value: true,
-        message: "Поле о себе является обязательным",
-      },
+      default: "Исследователь",
       minlength: 2,
       maxlength: 30,
     },
     avatar: {
       type: String,
+      default:
+        "https://pictures.s3.yandex.net/resources/jacques-cousteau_1604399756.png",
       validate: {
-        validator: (v) => isURL(v),
+        validator (v) {
+          return /https?:\/\/(www\.)?[-a-zA-Z0-9@:%._+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_+.~#?&//=]*)/.test(
+            v
+          );
+        },
         message: "Некорректный URL",
       },
-      required: true,
     },
   },
   {
     versionKey: false,
   }
 );
+
+//  eslint-disable-next-line func-names
+userSchema.statics.findUserByCredentials = function (email, password) {
+  return this.findOne({ email })
+    .select("+password")
+    .then((user) => {
+      if (!user) {
+        return Promise.reject(new Error("WrongUserData"));
+      }
+      return bcrypt.compare(password, user.password).then((matched) => {
+        if (!matched) {
+          return Promise.reject(new Error("WrongUserData"));
+        }
+        return user;
+      });
+    });
+};
 
 module.exports = model("user", userSchema);
