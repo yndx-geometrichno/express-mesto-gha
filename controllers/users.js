@@ -1,5 +1,10 @@
+const jwt = require("jsonwebtoken");
+const bcrypt = require("bcrypt");
 const User = require("../models/user");
 const ApiError = require("../error/ApiError");
+
+const MONGO_DUPLICATE_ERROR_CODE = 11000;
+const SALT_ROUNDS = 10;
 
 const getUsers = async (req, res, next) => {
   try {
@@ -28,11 +33,34 @@ const getUser = async (req, res, next) => {
   }
 };
 
+const getMe = async (req,res,next) => {
+  try {
+    const { _id } = req.user;
+    const user = await User.findById(_id).orFail(new Error("NotFound"));
+    return res.send(user);
+  } catch (err) {
+    if (err.message === "NotFound") {
+      return next(
+        ApiError.badRequest("Пользователь по указанному _id не найден")
+      );
+    }
+    return next(err)
+  }
+}
+
 const createUser = async (req, res, next) => {
   try {
-    const { name, about, avatar } = req.body;
-    const newUser = await User.create({ name, about, avatar });
-    return res.status(201).send(await newUser.save());
+    const { name, about, avatar, email, password } = req.body;
+    const hashPass = await bcrypt.hash(password, SALT_ROUNDS);
+    const newUser = await User.create({
+      name,
+      about,
+      avatar,
+      email,
+      password: hashPass,
+    });
+    return res.status(201).send({email: newUser.email, _id: newUser._id});
+
   } catch (err) {
     if (err.name === "ValidationError") {
       return next(
@@ -41,6 +69,12 @@ const createUser = async (req, res, next) => {
         )
       );
     }
+    if (err.code === MONGO_DUPLICATE_ERROR_CODE) {
+      return next(
+        ApiError.conflict("Пользователь с таким Email уже зарегистрирован")
+      );
+    }
+
     return next(err);
   }
 };
@@ -84,10 +118,33 @@ const updateUserAvatar = async (req, res, next) => {
   }
 };
 
+const login = async (req, res, next) => {
+  try {
+    const { email, password } = req.body;
+
+    return User.findUserByCredentials(email, password).then((user) => {
+      const token = jwt.sign({ _id: user._id }, "very-secret-key", {
+        expiresIn: "7d",
+      });
+      res.send({ token });
+      return next({ token, user });
+    });
+  } catch (err) {
+    if (err.message === "WrongUserData") {
+      return next(
+        ApiError.unauthorized(`Неправильные почта или пароль, ${err}`)
+      );
+    }
+    return next(err);
+  }
+};
+
 module.exports = {
   getUsers,
   getUser,
+  getMe,
   createUser,
   updateUserInfo,
   updateUserAvatar,
+  login,
 };
