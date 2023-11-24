@@ -2,6 +2,7 @@ const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
 const helmet = require("helmet");
+const { errors } = require("celebrate");
 const router = require("./routes/index");
 const errorHandler = require("./middleware/ErrorHandlingMiddleWare");
 
@@ -15,14 +16,8 @@ app.use(express.json());
 
 mongoose.connect(DB_URL, {});
 
-app.use((req, res, next) => {
-  req.user = {
-    _id: "6553e0c5587ddc812d4d5bbe",
-  };
-
-  next();
-});
 app.use("/", router);
+app.use(errors());
 app.use(errorHandler);
 
 app.listen(PORT);
