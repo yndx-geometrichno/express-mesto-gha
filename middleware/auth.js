@@ -1,23 +1,24 @@
 const jwt = require("jsonwebtoken");
 const ApiError = require("../error/ApiError");
 
-module.exports = (req,res,next) => {
-  const {authorization} = req.headers;
+module.exports = (req, res, next) => {
+  const { token } = req.cookies;
+  const { SECRET_KEY } = process.env;
 
-  if(!authorization || !authorization.startsWith('Bearer')) {
-    return next (ApiError.unauthorized("User is unauthorized"));
+  if (!token) {
+    return next(ApiError.unauthorized("User is unauthorized"));
   }
 
-  const token = authorization.replace('Bearer ', '');
+  // const token = authorization.replace('Bearer ', '');
   let payload;
 
   try {
-    payload = jwt.verify(token, 'very-secret-key');
-  } catch(err) {
+    payload = jwt.verify(token, SECRET_KEY);
+  } catch (err) {
     return next(ApiError.unauthorized("User is unauthorized"));
   }
 
   req.user = payload;
 
   return next();
-}
+};
