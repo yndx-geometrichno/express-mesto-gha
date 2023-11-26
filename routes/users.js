@@ -18,10 +18,9 @@ router.get(
   "/:userId",
   celebrate({
     params: {
-      userId: Joi.required(),
+      userId: Joi.string().alphanum().length(24),
     },
   }),
-  validateId,
   getUser
 );
 router.patch(
