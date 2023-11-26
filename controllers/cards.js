@@ -44,14 +44,14 @@ const createCard = async (req, res, next) => {
 const deleteCard = async (req, res, next) => {
   try {
     const { cardId } = req.params;
-    const card = await Card.findOne({ _id: cardId });
+    const card = await Card.findOne({ _id: cardId }).orFail(new Error("NotFound"));
     const cardOwnerId = card.owner._id.toString().split("''");
     if (!cardOwnerId.includes(req.user._id)) {
       return next(
         ApiError.forbidden("У вас недостаточно прав для удаления карточки")
       );
     }
-    await card.deleteOne().orFail(new Error("NotFound"));
+    await card.deleteOne();
     return res.status(200).send({ message: "Данная карточка удалена успешно" });
   } catch (err) {
     if (err.message === "NotFound") {

@@ -59,7 +59,14 @@ const createUser = async (req, res, next) => {
       email,
       password: hashPass,
     });
-    return res.status(201).send({ newUser });
+
+    const userWithoutPassword = newUser.toObject({ transform: (doc, ret) => {
+      // eslint-disable-next-line no-param-reassign
+      delete ret.password;
+      return ret;
+    }});
+
+    return res.status(201).send({ newUser: userWithoutPassword });
   } catch (err) {
     if (err.name === "ValidationError") {
       return next(
