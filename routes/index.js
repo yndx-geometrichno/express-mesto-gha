@@ -6,6 +6,9 @@ const cardRouter = require("./cards");
 const auth = require("../middleware/auth");
 const { createUser, login } = require("../controllers/users");
 
+const { DEFAULT_USER_NAME, DEFAULT_USER_ABOUT, DEFAULT_USER_AVATAR } =
+  process.env;
+
 router.post(
   "/signup",
   celebrate({
@@ -13,11 +16,9 @@ router.post(
       .keys({
         email: Joi.string().email().required(),
         password: Joi.string().required(),
-        name: Joi.string().default("Жак-Ив Кусто"),
-        about: Joi.string().default("Исследователь"),
-        avatar: Joi.string().default(
-          "https://pictures.s3.yandex.net/resources/jacques-cousteau_1604399756.png"
-        ),
+        name: Joi.string().min(2).max(30).default(DEFAULT_USER_NAME),
+        about: Joi.string().min(2).max(30).default(DEFAULT_USER_ABOUT),
+        avatar: Joi.string().uri().default(DEFAULT_USER_AVATAR),
       })
       .unknown(true),
   }),
