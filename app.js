@@ -8,7 +8,9 @@ const { errors } = require("celebrate");
 const router = require("./routes/index");
 const errorHandler = require("./middleware/ErrorHandlingMiddleWare");
 
-const { DB_PORT, DB_URL } = process.env;
+// const { DB_PORT, DB_URL } = process.env;
+const DB_PORT = 3000;
+const DB_URL = "mongodb://127.0.0.1:27017/mestodb";
 
 const app = express();
 app.use(helmet());
@@ -22,4 +24,4 @@ app.use("/", router);
 app.use(errors());
 app.use(errorHandler);
 
-app.listen(DB_PORT || 3000);
+app.listen(DB_PORT);
