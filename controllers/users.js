@@ -3,8 +3,7 @@ const bcrypt = require("bcrypt");
 const User = require("../models/user");
 const ApiError = require("../error/ApiError");
 
-const MONGO_DUPLICATE_ERROR_CODE = 11000;
-const SALT_ROUNDS = 10;
+const { MONGO_DUPLICATE_ERROR_CODE, SECRET_KEY } = process.env;
 
 const getUsers = async (req, res, next) => {
   try {
@@ -51,7 +50,7 @@ const getMe = async (req, res, next) => {
 const createUser = async (req, res, next) => {
   try {
     const { name, about, avatar, email, password } = req.body;
-    const hashPass = await bcrypt.hash(password, SALT_ROUNDS);
+    const hashPass = await bcrypt.hash(String(password), 10);
     const newUser = await User.create({
       name,
       about,
@@ -59,7 +58,7 @@ const createUser = async (req, res, next) => {
       email,
       password: hashPass,
     });
-    return res.status(201).send({ email: newUser.email, _id: newUser._id });
+    return res.status(201).send({ newUser });
   } catch (err) {
     if (err.name === "ValidationError") {
       return next(
@@ -122,11 +121,16 @@ const login = async (req, res, next) => {
     const { email, password } = req.body;
 
     return User.findUserByCredentials(email, password).then((user) => {
-      const token = jwt.sign({ _id: user._id }, "very-secret-key", {
+      const token = jwt.sign({ _id: user._id }, SECRET_KEY, {
         expiresIn: "7d",
       });
-      res.send({ token });
-      return next({ token, user });
+      res
+        .cookie("token", token, {
+          maxAge: 3600000 * 24 * 7,
+          httpOnly: true,
+          sameSite: true,
+        })
+        .send({ user });
     });
   } catch (err) {
     if (err.message === "WrongUserData") {
