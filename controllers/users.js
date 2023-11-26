@@ -60,11 +60,13 @@ const createUser = async (req, res, next) => {
       password: hashPass,
     });
 
-    const userWithoutPassword = newUser.toObject({ transform: (doc, ret) => {
-      // eslint-disable-next-line no-param-reassign
-      delete ret.password;
-      return ret;
-    }});
+    const userWithoutPassword = newUser.toObject({
+      transform: (doc, ret) => {
+        // eslint-disable-next-line no-param-reassign
+        delete ret.password;
+        return ret;
+      },
+    });
 
     return res.status(201).send({ newUser: userWithoutPassword });
   } catch (err) {
@@ -88,9 +90,8 @@ const createUser = async (req, res, next) => {
 const updateUserInfo = async (req, res, next) => {
   try {
     const { name, about } = req.body;
-    const userId = req.body._id;
     const updateUser = await User.findOneAndUpdate(
-      userId,
+      { _id: req.user.id },
       { $set: { name, about } },
       { new: true, runValidators: true }
     ).orFail(new Error("ValidationError"));
@@ -109,7 +110,7 @@ const updateUserAvatar = async (req, res, next) => {
   try {
     const { avatar } = req.body;
     const userUpdateAvatar = await User.findOneAndUpdate(
-      req.body._id,
+      { _id: req.user.id },
       { $set: { avatar } },
       { new: true, runValidators: true }
     );
