@@ -90,9 +90,8 @@ const createUser = async (req, res, next) => {
 const updateUserInfo = async (req, res, next) => {
   try {
     const { name, about } = req.body;
-    const {userId} = req.user;
     const updateUser = await User.findOneAndUpdate(
-      userId,
+      {_id: req.user._id},
       { $set: { name, about } },
       { new: true, runValidators: true }
     ).orFail(new Error("ValidationError"));
@@ -111,7 +110,7 @@ const updateUserAvatar = async (req, res, next) => {
   try {
     const { avatar } = req.body;
     const userUpdateAvatar = await User.findOneAndUpdate(
-      { _id: req.user.id },
+      { _id: req.user._id },
       { $set: { avatar } },
       { new: true, runValidators: true }
     );

@@ -20,7 +20,7 @@ module.exports = (req, res, next) => {
   }
 
   req.user = payload;
-  req.user._id = jwt.decode(payload)
+  req.user._id = jwt.decode(token, SECRET_KEY);
 
   return next();
 };
