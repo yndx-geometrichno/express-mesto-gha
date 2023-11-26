@@ -29,7 +29,7 @@ const getCard = async (req, res, next) => {
 const createCard = async (req, res, next) => {
   try {
     const { name, link } = req.body;
-    const newCard = await Card.create({ name, link, owner: req.user._id });
+    const newCard = await Card.create({ name, link, owner: req.user._id._id });
     return res.status(201).send(await newCard.save());
   } catch (err) {
     if (err.name === "ValidationError") {
@@ -46,7 +46,8 @@ const deleteCard = async (req, res, next) => {
     const { cardId } = req.params;
     const card = await Card.findOne({ _id: cardId }).orFail(new Error("NotFound"));
     const cardOwnerId = card.owner._id.toString().split("''");
-    if (!cardOwnerId.includes(req.user._id)) {
+    const userId = req.user._id._id;
+    if (!cardOwnerId.includes(userId)) {
       return next(
         ApiError.forbidden("У вас недостаточно прав для удаления карточки")
       );
@@ -69,7 +70,7 @@ const likeCard = async (req, res, next) => {
     const { cardId } = req.params;
     await Card.findByIdAndUpdate(
       cardId,
-      { $addToSet: { likes: req.user._id } },
+      { $addToSet: { likes: req.user._id._id } },
       { new: true }
     ).orFail(new Error("NotFound"));
     return res.status(200).send({ message: "Лайк поставлен" });
@@ -89,7 +90,7 @@ const dislikeCard = async (req, res, next) => {
     const { cardId } = req.params;
     await Card.findByIdAndUpdate(
       cardId,
-      { $pull: { likes: req.user._id } },
+      { $pull: { likes: req.user._id._id } },
       { new: true }
     ).orFail(new Error("NotFound"));
     return res.status(200).send({ message: "Лайк удален" });
