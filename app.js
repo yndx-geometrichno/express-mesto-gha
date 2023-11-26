@@ -16,7 +16,7 @@ app.use(cors());
 app.use(express.json());
 app.use(cookieParser());
 
-mongoose.connect(DB_URL, {});
+mongoose.connect(String(DB_URL), {});
 
 app.use("/", router);
 app.use(errors());
