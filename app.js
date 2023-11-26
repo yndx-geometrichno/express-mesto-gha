@@ -22,4 +22,4 @@ app.use("/", router);
 app.use(errors());
 app.use(errorHandler);
 
-app.listen(DB_PORT);
+app.listen(DB_PORT || 3000);
