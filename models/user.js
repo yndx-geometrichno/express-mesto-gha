@@ -50,20 +50,21 @@ const userSchema = new Schema(
 );
 
 //  eslint-disable-next-line func-names
-userSchema.statics.findUserByCredentials = function (email, password) {
-  return this.findOne({ email })
-    .select("+password")
-    .then((user) => {
-      if (!user) {
-        return Promise.reject(new Error("WrongUserData"));
+userSchema.statics.findUserByCredentials = async function (email, password) {
+  try {
+    const user = await this.findOne({ email }).select("+password");
+    if (!user) {
+      throw new Error("WrongUserData");
+    }
+    return bcrypt.compare(password, user.password).then((matched) => {
+      if (!matched) {
+        throw new Error("WrongUserData");
       }
-      return bcrypt.compare(password, user.password).then((matched) => {
-        if (!matched) {
-          return Promise.reject(new Error("WrongUserData"));
-        }
-        return user;
-      });
+      return this.findOne({ email });
     });
+  } catch (err) {
+    return new Error("WrongUserData");
+  }
 };
 
 module.exports = model("user", userSchema);

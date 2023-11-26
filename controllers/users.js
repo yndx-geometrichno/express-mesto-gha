@@ -121,23 +121,25 @@ const login = async (req, res, next) => {
   try {
     const { email, password } = req.body;
 
-    return User.findUserByCredentials(email, password).then((user) => {
-      const token = jwt.sign({ _id: user._id }, SECRET_KEY, {
-        expiresIn: "7d",
-      });
-      res
-        .cookie("token", token, {
-          maxAge: 3600000 * 24 * 7,
-          httpOnly: true,
-          sameSite: true,
-        })
-        .send({ user });
+    const user = await User.findUserByCredentials(email, password);
+
+    if (user.message === "WrongUserData") {
+      return next(ApiError.unauthorized(`Неправильные почта или пароль`));
+    }
+    const token = jwt.sign({ _id: user._id }, SECRET_KEY, {
+      expiresIn: "7d",
     });
+    res
+      .cookie("token", token, {
+        maxAge: 3600000 * 24 * 7,
+        httpOnly: true,
+        sameSite: true,
+      })
+      .send({ user });
+    return user;
   } catch (err) {
     if (err.message === "WrongUserData") {
-      return next(
-        ApiError.unauthorized(`Неправильные почта или пароль, ${err}`)
-      );
+      return next(ApiError.unauthorized(`Неправильные почта или пароль`));
     }
     return next(err);
   }
